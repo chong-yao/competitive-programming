@@ -1,4 +1,4 @@
-## this is my submission for the:
+# this is my submission for the:
 
 # 2025 Code Jam 12 Qualifier
 To qualify for the upcoming Code Jam, you'll have to complete a qualifier assignment. The goal is to make sure you have enough Python knowledge to effectively contribute to a team.
