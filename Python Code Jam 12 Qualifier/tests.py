@@ -5,7 +5,6 @@ import qualifier
 
 solution = qualifier.query_selector_all
 
-
 class TestQuerySelector(unittest.TestCase):
 
     def setUp(self):
@@ -170,7 +169,6 @@ class TestQuerySelector(unittest.TestCase):
         result = solution(node, "li#random.someclass, a#home-link, div, .colour-primary.badclass")
         answer = [node, node.children[0], node.children[0].children[4], node.children[1]]
         self.assertCountEqual(result, answer)
-
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,73 +2,97 @@ from __future__ import annotations
 
 from node import Node
 
-# def query_selector_all(node: "Node", selector: str) -> list["Node"]:
-#     nodes, q, seen = [], [node], set()
-#     while q: n = q.pop(0); nodes.append(n); q.extend(n.children)
-    
-#     queries = [(lambda p: (next((i for i in p if i[0] not in '.#'), None), next((i[1:] for i in p if i[0] == '#'), None), {i[1:] for i in p if i[0] == '.'}))(s.strip().replace('#', ' #').replace('.', ' .').split()) for s in selector.split(',') if s.strip()]
-
-#     return [seen.add(id(n)) or n for n in nodes if id(n) not in seen and any((not t or n.tag == t) and (not i or n.attributes.get('id') == i) and c.issubset(n.attributes.get('class', '').split()) for t, i, c in queries)][:]
-
 def query_selector_all(node: "Node", selector: str) -> list["Node"]:
     """
     Given a node, the function will return all nodes, including children,
     that match the given selector.
     """
-    # --- Part 1: Gather all nodes into a flat list ---
-    all_nodes_in_tree = []
+    # (1) get every single node in the document into one big list
+    all_nodes = []
+
+    # highest, top-level node
     nodes_to_visit = [node]
-    while nodes_to_visit:
+
+    while len(nodes_to_visit) > 0:
+        # get the first node from the list to add it into all_nodes
         current_node = nodes_to_visit.pop(0)
-        all_nodes_in_tree.append(current_node)
-        for child in current_node.children:
-            nodes_to_visit.append(child)
+        all_nodes.append(current_node)
+        
+        # add all the children of the current node to our "to-visit" list
+        for child_node in current_node.children:
+            nodes_to_visit.append(child_node)
 
-    # --- Part 2: Prepare to store the results ---
     matching_nodes = []
+    
+    # (2) handle queries, like "h1, p"
+    # need to check each part separately since the selector string can have multiple parts separated by commas.
+    list_of_queries = selector.split(',')
 
-    # --- Part 3: Process each query in the selector ---
-    for single_query in selector.split(','):
+    for single_query in list_of_queries:
+        # remove spaces
         query = single_query.strip()
+
+        # if the query part is empty (e.g., from a trailing comma "h1,"), just skip it
         if not query:
             continue
 
-        # --- Part 4: Parse a single query ---
-        parts = query.replace('#', ' #').replace('.', ' .').split()
+        # (4) find the tag, class, and id of a single query
+        # add spaces before '#' and '.' to make splitting easier
+        # e.g. "p.intro#main" becomes "p .intro #main", which splits into ['p', '.intro', '#main']
+        query_parts = query.replace('#', ' #').replace('.', ' .').split()
 
         tag_selector = None
         id_selector = None
         class_selectors = []
-        for part in parts:
+        
+        for part in query_parts:
             if part.startswith('#'):
                 id_selector = part[1:]
+
             elif part.startswith('.'):
                 class_selectors.append(part[1:])
+
             else:
                 tag_selector = part
 
-        # --- Part 5: Check every node against the parsed query ---
-        for n in all_nodes_in_tree:
-            is_a_match = True
+                
+        # (5) check every node from (1) against the query rules from (4)
+        for node_to_check in all_nodes:
+            # assume current node is a match until we find something that proves it isn't
+            match = True
 
-            if tag_selector and n.tag != tag_selector:
-                is_a_match = False
+            # check the tag(e.g., is the query for a 'p' and is this node a 'p'?)
+            if tag_selector is not None:
+                if node_to_check.tag != tag_selector:
+                    match = False
+            
+            # if tag matches...
+            # check the ID match (e.g., is the query for '#main'?)
+            if match == True and id_selector is not None:
+                if node_to_check.attributes.get('id') != id_selector:
+                    match = False
 
-            if is_a_match and id_selector and n.attributes.get('id') != id_selector:
-                is_a_match = False
-
-            if is_a_match and class_selectors:
-                node_classes_str = n.attributes.get('class', '')
-                node_classes = node_classes_str.split()
+            # if ID also matches...
+            # check if node has all the required classes (e.g., '.class1.class2')
+            if match == True and len(class_selectors) > 0:
+                node_classes_string = node_to_check.attributes.get('class', '')
+                node_classes_list = node_classes_string.split()
+                
                 for required_class in class_selectors:
-                    if required_class not in node_classes:
-                        is_a_match = False
+                    if required_class not in node_classes_list:
+                        match = False
                         break
+            
+            # (6) if it's a match, add it to our results list
+            if match == True:
+                # cannot add the same node more than once.
+                is_node_already_in_list = False
+                for existing_node in matching_nodes:
+                    if existing_node is node_to_check:
+                        is_node_already_in_list = True
+                        break
+                
+                if is_node_already_in_list == False:
+                    matching_nodes.append(node_to_check)
 
-            # --- Part 6: If it's a match, add it to our list ---
-            if is_a_match:
-                if n not in matching_nodes:
-                    matching_nodes.append(n)
-
-    # --- Part 7: Return the final list ---
     return matching_nodes
