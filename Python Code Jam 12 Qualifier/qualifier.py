@@ -58,7 +58,7 @@ def query_selector_all(node: "Node", selector: str) -> list["Node"]:
             # assume current node is a match until we find something that proves it isn't
             match = True
 
-            # check the tag(e.g., is the query for a 'p' and is this node a 'p'?)
+            # check the tag (e.g., is the query for a 'p' and is this node a 'p'?)
             if tag_selector and node_to_check.tag != tag_selector:
                  match = False
             
