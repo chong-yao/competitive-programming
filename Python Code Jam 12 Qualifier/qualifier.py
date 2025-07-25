@@ -13,24 +13,21 @@ def query_selector_all(node: "Node", selector: str) -> list["Node"]:
     # highest, top-level node
     nodes_to_visit = [node]
 
-    while len(nodes_to_visit) > 0:
-        # get the first node from the list to add it into all_nodes
+    while len(nodes_to_visit):
         current_node = nodes_to_visit.pop(0)
         all_nodes.append(current_node)
-        
-        # add all the children of the current node to our "to-visit" list
-        for child_node in current_node.children:
-            nodes_to_visit.append(child_node)
+
+        for n in current_node.children:
+            nodes_to_visit.append(n)
 
     matching_nodes = []
     
     # (2) handle queries, like "h1, p"
-    # need to check each part separately since the selector string can have multiple parts separated by commas.
+    # need to check each part separately since the selector string can have multiple parts separated by commas
     list_of_queries = selector.split(',')
 
-    for single_query in list_of_queries:
-        # remove spaces
-        query = single_query.strip()
+    for q in list_of_queries:
+        query = q.strip()
 
         # if the query part is empty (e.g., from a trailing comma "h1,"), just skip it
         if not query:
@@ -62,19 +59,17 @@ def query_selector_all(node: "Node", selector: str) -> list["Node"]:
             match = True
 
             # check the tag(e.g., is the query for a 'p' and is this node a 'p'?)
-            if tag_selector is not None:
-                if node_to_check.tag != tag_selector:
-                    match = False
+            if tag_selector and node_to_check.tag != tag_selector:
+                 match = False
             
             # if tag matches...
             # check the ID match (e.g., is the query for '#main'?)
-            if match == True and id_selector is not None:
-                if node_to_check.attributes.get('id') != id_selector:
-                    match = False
+            if match and id_selector and node_to_check.attributes.get('id') != id_selector:
+                match = False
 
             # if ID also matches...
             # check if node has all the required classes (e.g., '.class1.class2')
-            if match == True and len(class_selectors) > 0:
+            if match and len(class_selectors) > 0:
                 node_classes_string = node_to_check.attributes.get('class', '')
                 node_classes_list = node_classes_string.split()
                 
@@ -83,16 +78,8 @@ def query_selector_all(node: "Node", selector: str) -> list["Node"]:
                         match = False
                         break
             
-            # (6) if it's a match, add it to our results list
-            if match == True:
-                # cannot add the same node more than once.
-                is_node_already_in_list = False
-                for existing_node in matching_nodes:
-                    if existing_node is node_to_check:
-                        is_node_already_in_list = True
-                        break
-                
-                if is_node_already_in_list == False:
+            # (6) if it's a match, add it to our results list, but cannot add duplicates
+            if match == True and node_to_check not in matching_nodes:
                     matching_nodes.append(node_to_check)
 
     return matching_nodes
