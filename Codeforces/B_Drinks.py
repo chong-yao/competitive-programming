@@ -1,7 +1,4 @@
-n = float(input())
-p = list(int(x) for x in input().split())
-vol = 0
-for i in range(int(n)):
-    vol += (p[i] / 100)
+n = int(input())
+p = [int(x) for x in input().split()]
 
-print(100*vol / n)
+print(sum(p) / n)
