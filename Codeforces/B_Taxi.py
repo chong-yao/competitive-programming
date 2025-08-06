@@ -1,19 +1,32 @@
+from collections import Counter
+from math import ceil
+
 n = int(input())
+groups = [int(x) for x in input.split()]
 
-students = [int(x) for x in input().split()]
+count = Counter(groups)
+taxis = 0
 
-c1, c2, c3, c4 = students.count(1), students.count(2), students.count(3), students.count(4)
+# Groups of 4 each get a taxi
+taxis += count[4]
 
-cars = c4
+# Pair group of 3 with group of 1
+pair = min(count[3], count[1])
+taxis += pair
+count[3] -= pair
+count[1] -= pair
 
-cars += c3
+# Remaining 3s need own taxi
+taxis += count[3]
 
-c1 = max(0, c1 - c3)
+# Pair groups of 2 together
+taxis += count[2] // 2
+if count[2] % 2:
+    taxis += 1
+    count[1] -= min(2, count[1])
 
-cars += c2 //2
+# Remaining 1s, 4 per taxi
+if count[1] > 0:
+    taxis += ceil(count[1] / 4)
 
-c2 = c2 % 2
-
-if c2 == 1:
-    cars += 1
-    
+print(taxis)
